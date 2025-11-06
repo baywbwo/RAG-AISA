@@ -1,71 +1,45 @@
-import React, { useState } from 'react';
-import { Message } from '../types';
-import ReactMarkdown from 'react-markdown';
+
+import React from 'react';
+import { type Message } from '../types';
+import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import rehypeRaw from 'rehype-raw';
 
 interface ChatMessageProps {
   message: Message;
 }
 
 const UserIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" /><circle cx="12" cy="7" r="4" />
+  </svg>
 );
 
-const BotIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="M12 8V4H8"/><rect width="16" height="12" x="4" y="8" rx="2"/><path d="M2 14h2"/><path d="M20 14h2"/><path d="M15 13v2"/><path d="M9 13v2"/></svg>
+const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}>
+    <path d="M9.5 2A2.5 2.5 0 0 1 12 4.5v1.2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1V4.5A2.5 2.5 0 0 1 18.5 2h0A2.5 2.5 0 0 1 21 4.5v15a2.5 2.5 0 0 1-2.5 2.5h0A2.5 2.5 0 0 1 16 19.5v-1.2a1 1 0 0 0-1-1h-2a1 1 0 0 0-1 1v1.2A2.5 2.5 0 0 1 9.5 22h0A2.5 2.5 0 0 1 7 19.5v-15A2.5 2.5 0 0 1 9.5 2Z" /><path d="M5 2A2.5 2.5 0 0 0 2.5 4.5v15A2.5 2.5 0 0 0 5 22h0a2.5 2.5 0 0 0 2.5-2.5V18a1 1 0 0 1 1-1h1" /><path d="M18.5 2h0A2.5 2.5 0 0 0 16 4.5v1.2a1 1 0 0 1-1 1h-1" />
+  </svg>
 );
-
-const ChevronDown: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
-    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" {...props}><path d="m6 9 6 6 6-6"/></svg>
-  );
-  
 
 const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
-  const isUser = message.sender === 'user';
-  const [sourcesVisible, setSourcesVisible] = useState(false);
+  const isUserModel = message.role === 'model';
+  const textContent = message.parts.map(part => part.text).join('');
 
   return (
-    <div className={`flex items-start gap-4 ${isUser ? 'justify-end' : ''}`}>
-      {!isUser && (
+    <div className={`flex items-start gap-4 ${!isUserModel && 'justify-end'}`}>
+      {isUserModel && (
         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-emerald-100 rounded-full">
-          <BotIcon className="w-6 h-6 text-emerald-600" />
+          <BrainIcon className="w-6 h-6 text-emerald-600" />
         </div>
       )}
-      <div className="flex flex-col max-w-2xl">
-        <div
-            className={`p-4 rounded-2xl ${
-            isUser
-                ? 'bg-emerald-600 text-white rounded-br-none'
-                : 'bg-white text-slate-800 rounded-bl-none shadow-sm border border-slate-100'
-            }`}
-        >
-            <article className="prose prose-sm max-w-none prose-slate prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2 prose-table:my-3 prose-blockquote:my-2 prose-code:bg-slate-100 prose-code:p-1 prose-code:rounded prose-code:font-mono prose-code:text-sm prose-code:before:content-[''] prose-code:after:content-['']">
-              <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                {message.text || "..."}
-              </ReactMarkdown>
-            </article>
-        </div>
-        {!isUser && message.sources && message.sources.length > 0 && (
-            <div className="mt-2 text-xs text-slate-500">
-                <button onClick={() => setSourcesVisible(!sourcesVisible)} className="flex items-center gap-1 font-semibold hover:text-slate-800">
-                    Sources ({message.sources.length})
-                    <ChevronDown className={`w-4 h-4 transition-transform ${sourcesVisible ? 'rotate-180' : ''}`}/>
-                </button>
-                {sourcesVisible && (
-                    <div className="mt-2 space-y-2 border-l-2 border-slate-200 pl-3">
-                        {message.sources.map(source => (
-                            <div key={source.id} className="bg-slate-100 p-2 rounded-md">
-                                <p className="truncate font-medium text-slate-700">Source (Score: {source.score.toFixed(2)})</p>
-                                <p className="line-clamp-2 text-slate-600">{source.content}</p>
-                            </div>
-                        ))}
-                    </div>
-                )}
-            </div>
-        )}
-      </div>
 
-      {isUser && (
+      <div className={`max-w-xl rounded-2xl p-4 ${isUserModel ? 'bg-white shadow-sm border border-slate-100' : 'bg-emerald-600 text-white'}`}>
+        <article className="prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2">
+            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{textContent}</Markdown>
+        </article>
+      </div>
+      
+      {!isUserModel && (
         <div className="flex-shrink-0 w-10 h-10 flex items-center justify-center bg-slate-200 rounded-full">
           <UserIcon className="w-6 h-6 text-slate-600" />
         </div>

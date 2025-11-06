@@ -1,27 +1,25 @@
 export type UserRole = 'admin' | 'teacher';
+export type View = 'chat' | 'admin';
 
+// This is now the single source of truth for the User object structure.
 export interface User {
-  username: string;
+  id: number;
+  name: string;
+  nip: string; // Used as the username for login
   role: UserRole;
-  token: string;
-}
-
-export interface Source {
-  id: string;
-  content: string;
-  score: number;
+  lastActive: string;
+  password?: string; // This is required for authentication and creation
 }
 
 export interface Message {
+  role: 'user' | 'model';
+  parts: { text: string }[];
   id: string;
-  text: string;
-  sender: 'user' | 'assistant';
-  timestamp: Date;
-  sources?: Source[];
 }
 
 export interface Conversation {
   id: string;
   title: string;
   messages: Message[];
+  difyConversationId: string | null;
 }

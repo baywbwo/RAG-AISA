@@ -3,6 +3,7 @@
 
 // In a production app, these should be stored in environment variables.
 const DIFY_API_URL = 'https://api.dify.ai/v1/chat-messages';
+const DIFY_UPLOAD_URL = 'https://api.dify.ai/v1/files/upload';
 const DIFY_API_KEY = 'app-ECMWJKh7ExkqWXulCtSibHPZ';
 
 /**
@@ -107,5 +108,42 @@ export async function* streamChat(
         textChunk: "I'm sorry, but I've encountered an error connecting to the chat service. Please try again later.",
         conversationId: null
     };
+  }
+}
+
+/**
+ * Uploads a file to the Dify knowledge base.
+ * @param file The file object to upload.
+ * @param user A unique identifier for the end-user performing the upload.
+ * @returns The JSON response from the Dify API on successful upload.
+ */
+export async function uploadDocumentToDify(file: File, user: string) {
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('user', user);
+
+  try {
+    const response = await fetch(DIFY_UPLOAD_URL, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${DIFY_API_KEY}`,
+      },
+      body: formData,
+    });
+
+    const responseJson = await response.json();
+
+    if (!response.ok) {
+      console.error("Dify Upload API Error:", responseJson);
+      throw new Error(responseJson.message || `File upload failed with status ${response.status}`);
+    }
+
+    return responseJson;
+  } catch (error) {
+    console.error("Error in uploadDocumentToDify:", error);
+    if (error instanceof Error) {
+        throw error;
+    }
+    throw new Error("An unexpected error occurred during file upload.");
   }
 }

@@ -1,11 +1,14 @@
-export type UserRole = 'admin' | 'teacher' | null;
+export type UserRole = 'admin' | 'teacher';
+export type View = 'chat' | 'admin';
 
-// Add a User interface for session management
+// This is now the single source of truth for the User object structure.
 export interface User {
-  username: string;
-  role: NonNullable<UserRole>; // Role cannot be null when logged in
-  // In a real app, this would be a JWT or similar
-  token: string; 
+  id: number;
+  name: string;
+  nip: string; // Used as the username for login
+  role: UserRole;
+  lastActive: string;
+  password?: string; // This is required for authentication and creation
 }
 
 export interface Message {

@@ -1,9 +1,8 @@
 import React, { useState, FormEvent } from 'react';
-import { User } from '../types';
+import { User, UserRole } from '../types';
 
 interface LoginPageProps {
   onLoginSuccess: (user: User) => void;
-  allUsers: User[]; // The component now receives the list of all users
 }
 
 const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -12,28 +11,29 @@ const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
   </svg>
 );
 
-const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers }) => {
-  const [nip, setNip] = useState('');
+const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess }) => {
+  const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
 
-  // This function now authenticates against the live user list from the App state.
-  const authService = (userNip: string, userPass: string): Promise<User> => {
+  // This function simulates a call to a backend authentication service.
+  const mockAuthService = (u: string, p: string): Promise<User> => {
     return new Promise((resolve, reject) => {
       setTimeout(() => {
-        if (!userNip.trim() || !userPass) {
-          return reject(new Error('NIP and password are required.'));
-        }
-        
-        const foundUser = allUsers.find(
-          (user) => user.nip === userNip && user.password === userPass
-        );
-
-        if (foundUser) {
-          resolve(foundUser);
+        if (u.trim() && p) {
+          if (p === 'password') { // Mock password check
+            const role: NonNullable<UserRole> = u.toLowerCase() === 'admin' ? 'admin' : 'teacher';
+            resolve({
+              username: u,
+              role: role,
+              token: `mock-token-for-${u}` // Simulate a session token
+            });
+          } else {
+            reject(new Error('Invalid credentials. Please try again.'));
+          }
         } else {
-          reject(new Error('Invalid credentials. Please try again.'));
+          reject(new Error('Username and password are required.'));
         }
       }, 500); // Simulate network delay
     });
@@ -45,7 +45,9 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers }) => {
     setIsLoggingIn(true);
     
     try {
-      const user = await authService(nip, password);
+      // In a real app, you would make a fetch request here.
+      // e.g., const user = await fetch('/api/login', ...).then(res => res.json());
+      const user = await mockAuthService(username, password);
       onLoginSuccess(user);
     } catch (err: any) {
       setError(err.message || 'An unknown error occurred.');
@@ -68,15 +70,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers }) => {
           <div className="rounded-md shadow-sm -space-y-px">
             <div>
               <input
-                id="nip"
-                name="nip"
+                id="username"
+                name="username"
                 type="text"
                 autoComplete="username"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-600 bg-slate-800 placeholder-slate-400 text-white rounded-t-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm"
-                placeholder="NIP / Username"
-                value={nip}
-                onChange={(e) => setNip(e.target.value)}
+                placeholder="Username / NIP (e.g., 'admin' or 'guru')"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
               />
             </div>
             <div>
@@ -87,7 +89,7 @@ const LoginPage: React.FC<LoginPageProps> = ({ onLoginSuccess, allUsers }) => {
                 autoComplete="current-password"
                 required
                 className="appearance-none rounded-none relative block w-full px-3 py-3 border border-slate-600 bg-slate-800 placeholder-slate-400 text-white rounded-b-md focus:outline-none focus:ring-emerald-500 focus:border-emerald-500 focus:z-10 sm:text-sm"
-                placeholder="Password"
+                placeholder="Password (use 'password')"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />

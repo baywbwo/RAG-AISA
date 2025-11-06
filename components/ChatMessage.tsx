@@ -3,7 +3,6 @@ import React from 'react';
 import { type Message } from '../types';
 import Markdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import rehypeRaw from 'rehype-raw';
 
 interface ChatMessageProps {
   message: Message;
@@ -35,7 +34,7 @@ const ChatMessage: React.FC<ChatMessageProps> = ({ message }) => {
 
       <div className={`max-w-xl rounded-2xl p-4 ${isUserModel ? 'bg-white shadow-sm border border-slate-100' : 'bg-emerald-600 text-white'}`}>
         <article className="prose prose-slate max-w-none prose-p:my-2 prose-headings:my-3 prose-ul:my-2 prose-ol:my-2">
-            <Markdown remarkPlugins={[remarkGfm]} rehypePlugins={[rehypeRaw]}>{textContent}</Markdown>
+            <Markdown remarkPlugins={[remarkGfm]}>{textContent}</Markdown>
         </article>
       </div>
       

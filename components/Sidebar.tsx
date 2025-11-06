@@ -1,5 +1,5 @@
 import React from 'react';
-import { UserRole, View } from '../types';
+import { UserRole } from '../types';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -7,7 +7,6 @@ interface SidebarProps {
   onNewChat: () => void;
   onLogout: () => void;
   userRole: UserRole;
-  onSwitchView: (view: View) => void;
 }
 
 const BrainIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
@@ -33,7 +32,7 @@ const SettingsIcon: React.FC<React.SVGProps<SVGSVGElement>> = (props) => (
 );
 
 
-const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onNewChat, onLogout, userRole, onSwitchView }) => {
+const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onNewChat, onLogout, userRole }) => {
   return (
     <>
       <aside className={`fixed top-0 left-0 z-40 w-64 h-screen bg-white border-r border-slate-200 transform ${isOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:translate-x-0`}>
@@ -58,10 +57,10 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, setIsOpen, onNewChat, onLogou
               History (coming soon)
             </a>
              {userRole === 'admin' && (
-               <button onClick={() => onSwitchView('admin')} className="w-full flex items-center gap-3 px-3 py-2 text-slate-600 rounded-md hover:bg-slate-100 transition-colors">
+               <a href="#" className="flex items-center gap-3 px-3 py-2 text-slate-600 rounded-md hover:bg-slate-100 transition-colors">
                  <SettingsIcon className="w-5 h-5"/>
                  Admin Panel
-               </button>
+               </a>
              )}
           </nav>
           

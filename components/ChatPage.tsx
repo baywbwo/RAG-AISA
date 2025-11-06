@@ -44,8 +44,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, setSidebarOpen, conversation,
     
     const modelResponseId = `model-${Date.now()}`;
     // Add a placeholder for the model's response
-    // FIX: Use 'as const' on the 'role' property to ensure TypeScript infers it as a literal type ('model')
-    // instead of a generic 'string', satisfying the 'Message' type.
     onUpdateConversation(conversation.id, { messages: [...updatedMessages, { id: modelResponseId, role: 'model' as const, parts: [{ text: '' }] }] });
 
     try {
@@ -60,26 +58,38 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, setSidebarOpen, conversation,
           currentDifyId = chunk.conversationId;
           onUpdateConversation(conversation.id, { difyConversationId: currentDifyId });
         }
-
-        // We need to get the latest message list from the conversation prop
-        // for each update, so we use a function form of onUpdateConversation if it accepted one,
-        // or we just rebuild it based on the current state.
-        // FIX: Use 'as const' on the 'role' property to ensure TypeScript infers it as a literal type ('model')
-        // instead of a generic 'string', satisfying the 'Message' type.
+        
         const currentMessages = [...updatedMessages, { id: modelResponseId, role: 'model' as const, parts: [{ text: fullResponse + '...' }] }];
         onUpdateConversation(conversation.id, { messages: currentMessages });
       }
       
-      // FIX: Use 'as const' on the 'role' property to ensure TypeScript infers it as a literal type ('model')
-      // instead of a generic 'string', satisfying the 'Message' type.
       const finalMessages = [...updatedMessages, { id: modelResponseId, role: 'model' as const, parts: [{ text: fullResponse }] }];
       onUpdateConversation(conversation.id, { messages: finalMessages });
 
     } catch (error) {
       console.error('Error streaming chat:', error);
-      // FIX: Use 'as const' on the 'role' property to ensure TypeScript infers it as a literal type ('model')
-      // instead of a generic 'string', satisfying the 'Message' type.
-      const errorMessages = [...updatedMessages, { id: modelResponseId, role: 'model' as const, parts: [{ text: "Sorry, I encountered an error. Please try again." }] }];
+      
+      let displayMessage = "An unexpected error occurred. Please try again.";
+
+      if (error instanceof Error) {
+          // Check for specific Dify API errors which are embedded in the message
+          const apiErrorMatch = error.message.match(/API request failed with status \d+: (.*)/s);
+          if (apiErrorMatch && apiErrorMatch[1]) {
+              try {
+                  const errorJson = JSON.parse(apiErrorMatch[1]);
+                  // Use the user-facing 'message' from Dify's JSON response
+                  displayMessage = `AISA Service Error: ${errorJson.message || 'The request could not be processed.'}`;
+              } catch (e) {
+                  // If the error part is not valid JSON, show it as is.
+                  displayMessage = `AISA Service Error: ${apiErrorMatch[1]}`;
+              }
+          } else {
+              // For other errors (like network errors), display the message directly.
+              displayMessage = error.message;
+          }
+      }
+
+      const errorMessages = [...updatedMessages, { id: modelResponseId, role: 'model' as const, parts: [{ text: displayMessage }] }];
       onUpdateConversation(conversation.id, { messages: errorMessages });
     } finally {
       setIsLoading(false);

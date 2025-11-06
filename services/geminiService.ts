@@ -1,7 +1,7 @@
 // This service now connects to the Dify.ai API as requested.
 // All previous Gemini API logic has been removed.
 
-// In a production app, these should be stored in environment variables.
+// In a production app, these should be in environment variables.
 const DIFY_BASE_URL = 'https://api.dify.ai/v1';
 const DIFY_API_KEY = 'app-ECMWJKh7ExkqWXulCtSibHPZ';
 
@@ -29,12 +29,13 @@ export async function* streamChat(
   conversationId: string | null,
 ): AsyncGenerator<ChatStreamResponse> {
   
-  // To correctly trigger a Dify workflow, the prompt must be passed inside the 'inputs' object.
-  // The key ('query' in this case) should match the variable name in the workflow's Start node.
+  // To trigger a Dify workflow, the prompt must be passed to BOTH the top-level 'query'
+  // (for conversation history) and inside the 'inputs' object to feed the workflow's start node.
   const body: { [key: string]: any } = {
     inputs: {
-      query: prompt,
+      "query": prompt
     },
+    query: prompt,
     user: user,
     response_mode: 'streaming',
   };
@@ -49,6 +50,7 @@ export async function* streamChat(
       headers: {
         'Authorization': `Bearer ${DIFY_API_KEY}`,
         'Content-Type': 'application/json',
+        'Accept': 'text/event-stream',
       },
       body: JSON.stringify(body),
     });

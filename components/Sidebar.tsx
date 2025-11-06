@@ -39,15 +39,15 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, isOpen, setIsOpen, co
       <button onClick={() => setIsOpen(!isOpen)} className="fixed top-4 left-4 z-30 md:hidden bg-white p-2 rounded-full shadow-md text-slate-800">
         {isOpen ? <XIcon className="w-6 h-6"/> : <MenuIcon className="w-6 h-6"/>}
       </button>
-      <aside className={`fixed top-0 left-0 z-20 w-64 h-full bg-slate-900 text-white flex flex-col transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
-        <div className="p-6 border-b border-slate-700 flex justify-between items-center">
+      <aside className={`fixed top-0 left-0 z-20 w-64 h-full bg-white text-slate-800 flex flex-col transition-transform duration-300 ease-in-out border-r border-slate-200 ${isOpen ? 'translate-x-0' : '-translate-x-full'} md:translate-x-0`}>
+        <div className="p-6 border-b border-slate-200 flex justify-between items-center">
           <div>
-            <h1 className="text-2xl font-bold">AISA</h1>
-            <p className="text-sm text-slate-400">AL-MUSLIM ASSISTANT</p>
+            <h1 className="text-2xl font-bold text-slate-900">AISA</h1>
+            <p className="text-sm text-slate-500">AL-MUSLIM ASSISTANT</p>
           </div>
         </div>
         <div className="p-4">
-            <button onClick={onNewChat} className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-slate-600 hover:bg-slate-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-emerald-500 transition-colors">
+            <button onClick={onNewChat} className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md border border-slate-300 text-slate-700 bg-slate-50 hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-emerald-500 transition-colors">
                 <PlusIcon className="w-5 h-5"/>
                 <span>New Chat</span>
             </button>
@@ -62,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, isOpen, setIsOpen, co
                     className={`block w-full text-left truncate px-3 py-2 text-sm rounded-md transition-colors ${
                         activeConversationId === convo.id
                         ? 'bg-emerald-600 text-white font-semibold'
-                        : 'text-slate-300 hover:bg-slate-800'
+                        : 'text-slate-600 hover:bg-slate-100'
                     }`}
                 >
                     {convo.title}
@@ -70,20 +70,20 @@ const Sidebar: React.FC<SidebarProps> = ({ user, onLogout, isOpen, setIsOpen, co
             ))}
         </nav>
         
-        <div className="p-4 border-t border-slate-700 space-y-4">
+        <div className="p-4 border-t border-slate-200 space-y-4">
             {user.role === 'admin' && (
                 <button
                     onClick={onOpenAdminPanel}
-                    className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md text-slate-300 hover:bg-slate-800 focus:outline-none transition-colors"
+                    className="w-full flex items-center gap-3 px-4 py-2 text-sm font-medium rounded-md text-slate-600 hover:bg-slate-100 focus:outline-none transition-colors"
                 >
                     <PanelRightOpen className="w-5 h-5"/>
                     <span>Admin Panel</span>
                 </button>
             )}
-             <div className="px-1 text-slate-300">Welcome, <span className="font-semibold">{user.username}</span>! <span className="text-xs text-slate-400 capitalize">({user.role})</span></div>
+             <div className="px-1 text-slate-600">Welcome, <span className="font-semibold text-slate-800">{user.username}</span>! <span className="text-xs text-slate-500 capitalize">({user.role})</span></div>
             <button
             onClick={onLogout}
-            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-slate-800 hover:bg-red-600/80 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-red-500 transition-colors"
+            className="w-full flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium rounded-md bg-slate-100 text-slate-700 hover:bg-red-500 hover:text-white focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500 transition-colors"
             >
             <LogOutIcon className="w-5 h-5"/>
             <span>Logout</span>

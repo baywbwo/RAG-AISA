@@ -56,9 +56,6 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
         convo.messages.forEach(msg => msg.timestamp = new Date(msg.timestamp));
       });
       setConversations(parsedConvos);
-      if (parsedConvos.length > 0) {
-        setActiveConversationId(parsedConvos[0].id);
-      }
     }
   }, []);
 
@@ -77,54 +74,43 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
   }, []);
 
   const handleSendMessage = useCallback(async (text: string) => {
-    let currentConversationId = activeConversationId;
-
-    // Create a new conversation if there isn't one
-    if (!currentConversationId) {
-      const newConversation: Conversation = {
-        id: `convo-${Date.now()}`,
-        title: text.substring(0, 30) + '...',
-        messages: [],
-      };
-      setConversations(prev => [newConversation, ...prev]);
-      currentConversationId = newConversation.id;
-      setActiveConversationId(newConversation.id);
-    }
-    
-    const userMessage: Message = {
-      id: `user-${Date.now()}`, text, sender: 'user', timestamp: new Date()
-    };
-    
-    // Use a function for setting state to ensure we're updating the correct conversation
-    setConversations(prev => prev.map(c => 
-      c.id === currentConversationId 
-      ? { ...c, messages: [...c.messages, userMessage] } 
-      : c
-    ));
-    
     setIsLoading(true);
 
+    const userMessage: Message = { id: `user-${Date.now()}`, text, sender: 'user', timestamp: new Date() };
     const assistantMessageId = `assistant-${Date.now()}`;
-    const assistantMessage: Message = {
-      id: assistantMessageId, text: '', sender: 'assistant', timestamp: new Date(), sources: []
-    };
-    
-    setConversations(prev => prev.map(c =>
-      c.id === currentConversationId
-      ? { ...c, messages: [...c.messages, assistantMessage] }
-      : c
-    ));
+    const assistantMessage: Message = { id: assistantMessageId, text: '', sender: 'assistant', timestamp: new Date(), sources: [] };
 
-    const conversationHistory = conversations.find(c => c.id === currentConversationId)?.messages.slice(0, -1) || [];
-    const difyConversationId = localStorage.getItem(`dify-convo-${currentConversationId}`) || null;
+    let conversationIdForApi: string;
+
+    if (!activeConversationId) {
+        // Create a new conversation with user message and assistant placeholder in one go
+        const newConversation: Conversation = {
+            id: `convo-${Date.now()}`,
+            title: text.substring(0, 30) + (text.length > 30 ? '...' : ''),
+            messages: [userMessage, assistantMessage],
+        };
+        conversationIdForApi = newConversation.id;
+        
+        setConversations(prev => [newConversation, ...prev]);
+        setActiveConversationId(newConversation.id);
+    } else {
+        // Add user message and assistant placeholder to an existing conversation
+        conversationIdForApi = activeConversationId;
+        updateConversation(activeConversationId, convo => ({
+            ...convo,
+            messages: [...convo.messages, userMessage, assistantMessage],
+        }));
+    }
+    
+    const difyConversationId = localStorage.getItem(`dify-convo-${conversationIdForApi}`) || null;
 
     try {
       await streamDifyResponse({
         prompt: text,
-        history: conversationHistory,
+        history: [], // History is managed by Dify via conversation_id
         conversationId: difyConversationId,
         onChunk: (chunk) => {
-            updateConversation(currentConversationId!, convo => ({
+            updateConversation(conversationIdForApi, convo => ({
                 ...convo,
                 messages: convo.messages.map(msg => 
                     msg.id === assistantMessageId ? { ...msg, text: msg.text + chunk } : msg
@@ -133,9 +119,9 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
         },
         onComplete: (finalState) => {
             if (finalState.conversationId) {
-                localStorage.setItem(`dify-convo-${currentConversationId!}`, finalState.conversationId);
+                localStorage.setItem(`dify-convo-${conversationIdForApi}`, finalState.conversationId);
             }
-            updateConversation(currentConversationId!, convo => ({
+            updateConversation(conversationIdForApi, convo => ({
                 ...convo,
                 messages: convo.messages.map(msg => 
                     msg.id === assistantMessageId ? { ...msg, sources: finalState.sources } : msg
@@ -145,7 +131,7 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
       });
     } catch (error) {
       console.error("Error streaming response:", error);
-      updateConversation(currentConversationId!, convo => ({
+      updateConversation(conversationIdForApi, convo => ({
         ...convo,
         messages: convo.messages.map(msg => 
             msg.id === assistantMessageId ? { ...msg, text: "Sorry, I encountered an error. Please try again." } : msg
@@ -154,10 +140,12 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [activeConversationId, conversations, updateConversation]);
+  }, [activeConversationId, updateConversation]);
+
 
   const handleNewChat = useCallback(() => {
     setActiveConversationId(null);
+    setIsMobileSidebarOpen(false);
   }, []);
 
   const handleSelectConversation = useCallback((convoId: string) => {
@@ -181,20 +169,18 @@ const ChatPage: React.FC<ChatPageProps> = ({ user, onLogout }) => {
       <main className="flex-1 flex flex-col md:ml-64">
         <div className="flex-1 overflow-y-auto p-6 md:p-10">
           <div className="max-w-4xl mx-auto h-full">
-            {activeConversation && activeConversation.messages.length > 0 ? (
+            {activeConversation ? (
                 <ChatHistory messages={activeConversation.messages} />
             ) : (
-                user.role !== 'admin' && <WelcomeScreen onPromptClick={handleSendMessage} />
+                <WelcomeScreen onPromptClick={handleSendMessage} />
             )}
           </div>
         </div>
-        {user.role !== 'admin' && (
-          <div className="p-6 md:p-10 border-t bg-white/80 backdrop-blur-md sticky bottom-0">
-            <div className="max-w-4xl mx-auto">
-              <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
-            </div>
+        <div className="p-6 md:p-10 border-t bg-white/80 backdrop-blur-md sticky bottom-0">
+          <div className="max-w-4xl mx-auto">
+            <ChatInput onSendMessage={handleSendMessage} isLoading={isLoading} />
           </div>
-        )}
+        </div>
       </main>
       {user.role === 'admin' && <AdminPanel isOpen={isAdminPanelOpen} onClose={() => setIsAdminPanelOpen(false)} />}
     </div>

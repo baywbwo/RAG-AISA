@@ -14,7 +14,7 @@
     "react-markdown": "^10.1.0",
     "@google/genai": "^1.29.0",
     "remark-gfm": "^4.0.1",
-    "marked": "^16.4.1"
+    "rehype-raw": "7.0.0"
   },
   "devDependencies": {
     "@types/node": "^22.14.0",

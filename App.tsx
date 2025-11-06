@@ -12,11 +12,12 @@ const App: React.FC = () => {
   
   const handleLogout = useCallback(() => {
     setCurrentUser(null);
+    // Clear any session-related data if necessary
   }, []);
 
   return (
     <div className="w-screen h-screen font-sans text-slate-800">
-      {currentUser ? <ChatPage onLogout={handleLogout} user={currentUser} /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
+      {currentUser ? <ChatPage user={currentUser} onLogout={handleLogout} /> : <LoginPage onLoginSuccess={handleLoginSuccess} />}
     </div>
   );
 };

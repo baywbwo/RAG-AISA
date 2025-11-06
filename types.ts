@@ -1,15 +1,27 @@
-export type UserRole = 'admin' | 'teacher' | null;
+export type UserRole = 'admin' | 'teacher';
 
-// Add a User interface for session management
 export interface User {
   username: string;
-  role: NonNullable<UserRole>; // Role cannot be null when logged in
-  // In a real app, this would be a JWT or similar
-  token: string; 
+  role: UserRole;
+  token: string;
+}
+
+export interface Source {
+  id: string;
+  content: string;
+  score: number;
 }
 
 export interface Message {
-  role: 'user' | 'model';
-  parts: { text: string }[];
   id: string;
+  text: string;
+  sender: 'user' | 'assistant';
+  timestamp: Date;
+  sources?: Source[];
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  messages: Message[];
 }
